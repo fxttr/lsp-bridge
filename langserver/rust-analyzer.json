@@ -1,7 +1,7 @@
 {
   "name": "rust-analyzer",
   "languageId": "rust",
-  "command": ["rust-analyzer"],
+  "command": ["$HOME/.cargo/bin/rust-analyzer"],
   "settings": {},
   "initializationOptions": {
     "enableExperimental": false,
