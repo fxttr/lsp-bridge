@@ -16,7 +16,7 @@ lsp-bridge 使用 Python 多线程技术在 Emacs 和 LSP 服务器之间构建�
 ## 安装
 
 1. 安装 Emacs 28 及以上版本
-2. 安装 Python 依赖: `pip3 install epc orjson sexpdata six` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
+2. 安装 Python 依赖: `pip3 install epc orjson sexpdata==0.0.3 six` (orjson 是可选的， orjson 基于 Rust， 提供更快的 JSON 解析性能)
 3. 安装 Elisp 依赖:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -48,26 +48,28 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 3. 自定义 `lsp-bridge-get-project-path-by-filepath` 函数， 输入参数是打开文件的路径字符串， 输出参数是项目目录路径， lsp-bridge 会根据输出目录路径来提供补全
 
 ## 按键
-| 按键         | 命令                      | 备注                                                     |
-| :---         | :---                      | :---                                                     |
-| Alt + n      | acm-select-next           | 选择下一个后选词                                         |
-| Down         | acm-select-next           | 选择下一个后选词                                         |
-| Alt + p      | acm-select-prev           | 选择上一个后选词                                         |
-| Up           | acm-select-prev           | 选择上一个后选词                                         |
-| Alt + .      | acm-select-last           | 选择最后一个后选词                                       |
-| Alt + ,      | acm-select-first          | 选择第一个后选词                                         |
-| Ctrl + m     | acm-complete              | 完成补全                                                 |
-| Return       | acm-complete              | 完成补全                                                 |
-| Tab          | acm-complete              | 完成补全                                                 |
-| Alt + h      | acm-complete              | 完成补全                                                 |
-| Alt + H      | acm-insert-common         | 插入后选词共有部分                                       |
-| Alt + u      | acm-filter                | 用 Overlay 进一步过滤后选词                              |
-| Alt + d      | acm-doc-toggle            | 开启或关闭后选词文档                                     |
-| Alt + j      | acm-doc-scroll-up         | 向下滚动后选词文档                                       |
-| Alt + k      | acm-doc-scroll-down       | 向上滚动后选词文档                                       |
-| Alt + l      | acm-hide                  | 隐藏补全窗口                                             |
-| Ctrl + g     | acm-hide                  | 隐藏补全窗口                                             |
-| Alt + 数字键 | acm-complete-quick-access | 快速选择后选词， 需要开启 `acm-enable-quick-access` 选项  |
+| 按键           | 命令                        | 备注                                                       |
+| :------------- | :-------------------------- | :--------------------------------------------------------- |
+| Alt + n        | acm-select-next             | 选择下一个候选词                                           |
+| Down           | acm-select-next             | 选择下一个候选词                                           |
+| Alt + p        | acm-select-prev             | 选择上一个候选词                                           |
+| Up             | acm-select-prev             | 选择上一个候选词                                           |
+| Alt + ,        | acm-select-last             | 选择最后一个候选词                                         |
+| Alt + .        | acm-select-first            | 选择第一个候选词                                           |
+| Ctrl + v       | acm-select-next-page        | 向下滚动候选菜单                                           |
+| Alt + v        | acm-select-prev-page        | 向上滚动候选菜单                                           |
+| Ctrl + m       | acm-complete                | 完成补全                                                   |
+| Return         | acm-complete                | 完成补全                                                   |
+| Tab            | acm-complete                | 完成补全                                                   |
+| Alt + h        | acm-complete                | 完成补全                                                   |
+| Alt + H        | acm-insert-common           | 插入候选词共有部分                                         |
+| Alt + u        | acm-filter                  | 用 Overlay 进一步过滤候选词                                |
+| Alt + d        | acm-doc-toggle              | 开启或关闭候选词文档                                       |
+| Alt + j        | acm-doc-scroll-up           | 向下滚动候选词文档                                         |
+| Alt + k        | acm-doc-scroll-down         | 向上滚动候选词文档                                         |
+| Alt + l        | acm-hide                    | 隐藏补全窗口                                               |
+| Ctrl + g       | acm-hide                    | 隐藏补全窗口                                               |
+| Alt + 数字键   | acm-complete-quick-access   | 快速选择候选词， 需要开启 `acm-enable-quick-access` 选项   |
 
 ## 命令列表
 
@@ -86,21 +88,23 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-diagnostic-list`: 列出所有诊断信息
 * `lsp-bridge-diagnostic-copy`: 拷贝当前诊断信息到剪切板
 * `lsp-bridge-diagnostic-ignore`: 插入注视忽略当前诊断
+* `lsp-bridge-code-action`: 弹出代码修复菜单, 也可以指需要修复的代码动作类型: "quickfix", "refactor", "refactor.extract", "refactor.inline", "refactor.rewrite", "source", "source.organizeImports", "source.fixAll"
 * `lsp-bridge-workspace-list-symbols`: 列出工作区所有符号，并跳转到符号定义
 * `lsp-bridge-signature-help-fetch`: 在 minibuffer 显示参数信息
 * `lsp-bridge-popup-complete-menu`: 手动弹出补全菜单， 只有当打开 `lsp-bridge-complete-manually` 选项才需要使用这个命令
 * `lsp-bridge-restart-process`: 重启 lsp-bridge 进程 (一般只有开发者才需要这个功能)
 * `lsp-bridge-toggle-sdcv-helper`: 切换字典助手补全
-* `acm-insert-common`: 插入补全后选词的公共前缀
+* `acm-insert-common`: 插入补全候选词的公共前缀
 * `acm-doc-scroll-up`: API 文档窗口向上滚动
 * `acm-doc-scroll-down`: API 文档窗口向下滚动
 
 ## LSP 服务器选项
 * `lsp-bridge-c-lsp-server`: C 语言的服务器，可以选择`clangd`或者`ccls`
-* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择 `pyright`, `jedi`, `python-ms`, `pylsp`
+* `lsp-bridge-python-lsp-server`: Python 语言的服务器，可以选择 `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`
 * `lsp-bridge-php-lsp-server`: PHP 语言的服务器，可以选择`intelephense`或者`phpactor`
 * `lsp-bridge-tex-lsp-server`: LaTeX 语言的服务器，可以选择`texlab`或者`digestif`
 * `lsp-bridge-csharp-lsp-server`: C#语言的服务器， 可以选择`omnisharp-mono` 或者 ` omnisharp-dotnet`, 注意你需要给 OmniSharp 文件**执行权限**才能正常工作
+* `lsp-bridge-python-multi-lsp-server`: Python 多语言服务器，可以选择 `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 
 ## 选项
 * `lsp-bridge-python-command`: Python 命令的路径, 如果你用 `conda`， 你也许会定制这个选项。 Windows 平台用的是 `python.exe` 而不是 `python3`, 如果 lsp-bridge 不能工作， 可以尝试改成 `python3`
@@ -115,22 +119,27 @@ lsp-bridge 开箱即用， 安装好语言对应的[LSP 服务器](https://githu
 * `lsp-bridge-enable-log`: 启用 LSP 消息日志， 默认关闭, 除非开发目的， 平常请勿打开此选项以避免影响性能
 * `lsp-bridge-enable-debug`: 启用程序调试， 默认关闭
 * `lsp-bridge-disable-backup`: 禁止 emacs 对文件做版本管理， 默认打开
+* `lsp-bridge-code-action-enable-popup-menu`: 启用code action posframe菜单，默认打开
 * `lsp-bridge-diagnostic-fetch-idle`： 诊断延迟，默认是停止敲键盘后 0.5 秒开始拉取诊断信息
 * `lsp-bridge-signature-show-function`: 用于显示签名信息的函数, 默认是在 minibuffer 显示， 设置成 `lsp-bridge-signature-posframe` 后可以用 frame 来显示函数的签名信息
 * `lsp-bridge-completion-popup-predicates`: 补全菜单显示的检查函数， 这个选项包括的所有函数都检查过以后， 补全菜单才能显示
 * `lsp-bridge-completion-stop-commands`: 这些命令执行以后，不再弹出补全菜单
 * `lsp-bridge-completion-hide-characters`: 这些字符的后面不再弹出补全菜单
+* `lsp-bridge-user-langserver-dir`: 用户 langserver 配置文件目录，如果目录下的配置文件和 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 里的配置文件同名，lsp-bridge 会使用这个目录下的配置文件
+* `lsp-bridge-user-multiserver-dir`: 用户 multiserver 配置文件目录，如果目录下的配置文件和 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 里的配置文件同名，lsp-bridge 会使用这个目录下的配置文件
+* `lsp-bridge-symbols-enable-which-func`: 在`which-func`使用 lsp 后端, 默认关闭
+* `acm-frame-background-dark-color`: 暗色主题下的菜单背景颜色
+* `acm-frame-background-light-color`: 亮色主题下的菜单背景颜色
 * `acm-markdown-render-font-height`: 弹出文档的字体高度， 默认是 130
 * `acm-enable-doc`: 补全菜单是否显示帮助文档
 * `acm-enable-icon`: 补全菜单是否显示图标, macOS 用户需要给 brew 命令增加选项 `--with-rsvg` 来安装 Emacs 才能显示 SVG 图片
 * `acm-enable-doc-markdown-render`: 对补全文档中的 Markdown 内容进行语法着色， 你可以选择`'async`, `t` 或者 `nil`. 当选择`'async` 时, lsp-bridge 会采用异步渲， 当选择 `t` 时, lsp-bridge 会采用同步渲染， 同步渲染会降低补全速度， 默认是 `async` 选项
 * `acm-enable-tabnine`: 是否打开 tabnine 补全支持，默认打开，打开后需要运行命令 `lsp-bridge-install-tabnine` 来安装 tabnine 后就可以使用了。 TabNine 会消耗巨大的 CPU， 导致你整个电脑都卡顿， 如果电脑性能不好， 不建议开启此选项
 * `acm-enable-search-file-words`: 补全菜单是否显示打开文件的单词， 默认打开
-* `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择后选词， 默认关闭
+* `acm-enable-quick-access`: 是否在图标后面显示索引， 可以通过 Alt + Number 来快速选择候选词， 默认关闭
 * `acm-enable-yas`: yasnippet 补全，默认打开
 * `acm-enable-citre`: [citre(ctags)](https://github.com/universal-ctags/citre) 补全，默认关闭
 * `acm-doc-frame-max-lines`: 帮助窗口的最大行数， 默认是 20
-* `acm-snippet-insert-index`: 代码模板候选词在补全菜单中的显示位置
 * `acm-candidate-match-function`: 补全菜单匹配算法， orderless-* 开头的算法需要额外安装 [orderless](https://github.com/oantolin/orderless)
 * `acm-backend-lsp-candidate-min-length`: LSP 补全最小的触发字符数, 默认是 0
 * `acm-backend-lsp-enable-auto-import`: 支持自动导入， 默认打开
@@ -170,6 +179,20 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
                     (return "deno")))))))))
 ```
 
+## 自定义语言服务器配置文件
+拷贝 [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) 或 [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) 中的配置文件到 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 中进行自定义，lsp-bridge 会优先读取 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 里的配置文件。
+
+我们可以在启动 `lsp-bridge-mode` 之前设置 `lsp-bridge-user-langserver-dir` 或 `lsp-bridge-user-multiserver-dir` 的值，实现不同的工程用不同的配置文件
+
+```elisp
+(defun enable-lsp-bridge()
+  (when-let* ((project (project-current))
+              (project-root (nth 2 project)))
+    (setq-local lsp-bridge-user-langserver-dir project-root
+                lsp-bridge-user-multiserver-dir project-root))
+  (lsp-bridge-mode))
+```
+
 
 ## 添加新的编程语言支持?
 
@@ -184,64 +207,63 @@ lsp-bridge 每种语言的服务器配置存储在[lsp-bridge/langserver](https:
 
 你需要安装每个编程语言对应的 LSP 服务器， lsp-bridge 才能提供代码补全服务。
 
-| LSP 服务器                                                                                           | 语言                                    | 备注                                                                                                                                                                                  |
-| :--------------------------------------------------------------------------------------------------- | :--------------------------------       | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [clangd](https://github.com/clangd/clangd)                                                           | C, C++, Object-C                        |                                                                                                                                                                                       |
-| [ccls](https://github.com/MaskRay/ccls)                                                              | C, C++, Object-C                        | `lsp-bridge-c-lsp-server` 设置成 `ccls`                                                                                                                                               |
-| [pyright](https://github.com/microsoft/pyright)                                                      | Python                                  | `pip install pyright`, `lsp-bridge-python-lsp-server` 设置成 `pyright`, `pyright-background-analysis` 更快， 但是无法返回诊断信息                                                     |
-| [jedi](https://github.com/pappasam/jedi-language-server)                                             | Python                                  | `lsp-bridge-python-lsp-server` 设置成 `jedi`                                                                                                                                          |
-| [python-ms](https://github.com/microsoft/python-language-server)                                     | Python                                  | 支持 Python2 的 lsp                                                                                                                                                                   |
-| [pylsp](https://github.com/python-lsp/python-lsp-server)                                             | Python                                  | lsp-bridge-python-lsp-server 设置成 `pylsp`                                                                                                                                           |
-| [solargraph](https://github.com/castwide/solargraph)                                                 | Ruby                                    |                                                                                                                                                                                       |
-| [rust-analyzer](https://github.com/rust-lang/rust-analyzer)                                          | Rust                                    |                                                                                                                                                                                       |
-| [elixirLS](https://github.com/elixir-lsp/elixir-ls)                                                  | Elixir                                  | 请确保导出 `elixir-ls` 目录到你系统的 PATH 路径                                                                                                                                       |
-| [gopls](https://github.com/golang/tools/tree/master/gopls)                                           | Go                                      | 确保安装 [go-mode](https://github.com/dominikh/go-mode.el)， 同时确保 gopls 在 PATH 环境变量中, 执行命令 `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令   |
-| [hls](https://github.com/haskell/haskell-language-server)                                            | Haskell                                 |                                                                                                                                                                                       |
-| [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server)             | Dart                                    |                                                                                                                                                                                       |
-| [metals](https://scalameta.org/metals/)                                                              | Scala                                   |                                                                                                                                                                                       |
-| [typescript](https://github.com/typescript-language-server/typescript-language-server)               | Typescript, javascript                  |                                                                                                                                                                                       |
-| [ocamllsp](https://github.com/ocaml/ocaml-lsp)                                                       | Ocaml                                   |                                                                                                                                                                                       |
-| [erlang-ls](https://github.com/erlang-ls/erlang_ls)                                                  | Erlang                                  |                                                                                                                                                                                       |
-| [texlab](https://github.com/latex-lsp/texlab)                                                        | Latex                                   |                                                                                                                                                                                       |
-| [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls)                               | Java                                    | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的 PATH 路径                                                                                                    |
-| [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp)                                            | Clojure                                 | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux)                  |
-| [bash-language-server](https://github.com/bash-lsp/bash-language-server)                             | Bash                                    |                                                                                                                                                                                       |
-| [volar](https://github.com/johnsoncodehk/volar)                                                      | Vue                                     | npm install -g typescript @volar/vue-language-server -g                                                                                                                               |
-| [sumneko](https://github.com/sumneko/lua-language-server)                                            | Lua                                     | 请确保导出 sumneko 的 `bin` 目录到你系统的 PATH 路径                                                                                                                                  |
-| [wxml-language-server](https://github.com/chemzqm/wxml-languageserver)                               | Wxml                                    |                                                                                                                                                                                       |
-| [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)               | HTML                                    | npm i -g vscode-langservers-extracted                                                                                                                                                 |
-| [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)                | CSS                                     | npm i -g vscode-langservers-extracted                                                                                                                                                 |
-| [vscode-eslint-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)             | JavaScript                              | npm i -g vscode-langservers-extracted                                                                                                                                                 |
-| [vscode-json-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)               | JSON                                    | npm i -g vscode-langservers-extracted                                                                                                                                                 |
-| [elm-language-server](https://github.com/elm-tooling/elm-language-server)                            | Elm                                     |                                                                                                                                                                                       |
-| [intelephense](https://github.com/bmewburn/vscode-intelephense)                                      | PHP                                     |                                                                                                                                                                                       |
-| [Phpactor](https://github.com/phpactor/phpactor)                                                     | PHP                                     | lsp-brige-php-lsp-server 设置成 `phpactor`                                                                                                                                            |
-| [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                     | Yaml                                    | `npm install -g yaml-language-server`                                                                                                                                                 |
-| [zls](https://github.com/zigtools/zls)                                                               | Zig                                     | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                              |
-| [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server)             | Groovy                                  | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar`                                                       |
-| [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs)               | Dockerfiles                             |                                                                                                                                                                                       |
-| [serve-d](https://github.com/Pure-D/serve-d)                                                         | D                                       | serve-d 不支持单文件模式, 使用前请先在项目目录下初始 git 仓库或者自定义 `lsp-bridge-get-project-path-by-filepath` 返回项目目录                                                        |
-| [fortls](https://github.com/gnikit/fortls)                                                           | Fortran                                 |                                                                                                                                                                                       |
-| [emmet-ls](https://github.com/aca/emmet-ls)                                                          | HTML, JavaScript, CSS, SASS, SCSS, LESS |                                                                                                                                                                                       |
-| [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                                | Nix                                     |                                                                                                                                                                                       |
-| [taxlab](https://github.com/latex-lsp/texlab)                                                        | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `taxlab`                                                                                                                                           |
-| [digestif](https://github.com/astoff/digestif)                                                       | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `digestif`                                                                                                                                         |
-| [rlanguageserver](https://github.com/REditorSupport/languageserver)                                  | R                                       |                                                                                                                                                                                       |
-| [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli)   | GraphQL                                 |                                                                                                                                                                                       |
-| [cmake-language-server](https://github.com/regen100/cmake-language-server)                           | Cmake                                   | `pip install cmake-language-server`                                                                                                                                                   |
-| [Wen](https://github.com/metaescape/Wen)                                                             | Org-mode                                | `pip install pygls pypinyin`                                                                                                                                                          |
-| [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                              | Swift                                   | Sourcekit-lsp 包含在 swift toolchain 中。                                                                                                                                             |
-| [omnisharp-mono](https://github.com/OmniSharp/omnisharp-roslyn)                                      | C#                                      | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-mono`               |
-| [omnisharp-dotnet](https://github.com/OmniSharp/omnisharp-roslyn)                                    | C#                                      | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-dotnet`             |
-| [deno](https://deno.land)                                                                            | Deno                                    | Deno 使用 TypeScript 来编程， 你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串                                           |
-| [ansible-language-server](https://github.com/ansible/ansible-language-server)                        | Ansible                                 | Ansible 使用 YAML 来编程，你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Ansible 项目的路径时， 返回 "ansible-language-server" 字符串                         |
-
-### 不会支持的特性：
-lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但不是实现 LSP 协议最全的 LSP 客户端。
-
-下面的功能用 Emacs 现有生态做更好：
-1. 语法高亮: [Tree-sitter](https://tree-sitter.github.io/tree-sitter/) 是一个静态高性能的语法分析库，比 LSP 更适合完成语法高亮
-2. Xref: Xref 的机制是同步等待， lsp-bridge 是完全异步的， 两个机制无法融合， 请使用 `lsp-bridge-find-references` 来查看代码引用。
+| LSP 服务器                                                                                         | 语言                                    | 备注                                                                                                                                                                                                                     |
+|:---------------------------------------------------------------------------------------------------|:----------------------------------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [clangd](https://github.com/clangd/clangd)                                                         | C, C++, Object-C                        | 需要在项目根目录配置好 compile_commands.json                                                                                                                                                                             |
+| [ccls](https://github.com/MaskRay/ccls)                                                            | C, C++, Object-C                        | `lsp-bridge-c-lsp-server` 设置成 `ccls`, 需要在项目根目录配置好 compile_commands.json                                                                                                                                    |
+| [pyright](https://github.com/microsoft/pyright)                                                    | Python                                  | `pip install pyright`, `lsp-bridge-python-lsp-server` 设置成 `pyright`, `pyright-background-analysis` 更快， 但是无法返回诊断信息                                                                                        |
+| [jedi](https://github.com/pappasam/jedi-language-server)                                           | Python                                  | `lsp-bridge-python-lsp-server` 设置成 `jedi`                                                                                                                                                                             |
+| [python-ms](https://github.com/microsoft/python-language-server)                                   | Python                                  | 支持 Python2 的 lsp                                                                                                                                                                                                      |
+| [pylsp](https://github.com/python-lsp/python-lsp-server)                                           | Python                                  | lsp-bridge-python-lsp-server 设置成 `pylsp`                                                                                                                                                                              |
+| [ruff](https://github.com/charliermarsh/ruff-lsp)                                                  | Python                                  | `pip install ruff-lsp`，`lsp-bridge-python-lsp-server` 设置成 `ruff`，只具备 linter 的功能。如需补全等功能，安装其他的 Python 语言服务器，并把 `lsp-bridge-python-multi-lsp-server` 设置成 `[相应的语言服务器名称]_ruff` |
+| [solargraph](https://github.com/castwide/solargraph)                                               | Ruby                                    |                                                                                                                                                                                                                          |
+| [rust-analyzer](https://github.com/rust-lang/rust-analyzer)                                        | Rust                                    |                                                                                                                                                                                                                          |
+| [elixirLS](https://github.com/elixir-lsp/elixir-ls)                                                | Elixir                                  | 请确保导出 `elixir-ls` 目录到你系统的 PATH 路径                                                                                                                                                                          |
+| [gopls](https://github.com/golang/tools/tree/master/gopls)                                         | Go                                      | 确保安装 [go-mode](https://github.com/dominikh/go-mode.el)， 同时确保 gopls 在 PATH 环境变量中, 执行命令 `ln -s ~/go/bin/gopls ~/.local/bin`, 还要在补全之前执行 `go mod init` 命令                                      |
+| [hls](https://github.com/haskell/haskell-language-server)                                          | Haskell                                 |                                                                                                                                                                                                                          |
+| [dart-analysis-server](https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server)           | Dart                                    |                                                                                                                                                                                                                          |
+| [metals](https://scalameta.org/metals/)                                                            | Scala                                   |                                                                                                                                                                                                                          |
+| [typescript](https://github.com/typescript-language-server/typescript-language-server)             | Typescript, javascript                  |                                                                                                                                                                                                                          |
+| [ocamllsp](https://github.com/ocaml/ocaml-lsp)                                                     | Ocaml                                   |                                                                                                                                                                                                                          |
+| [erlang-ls](https://github.com/erlang-ls/erlang_ls)                                                | Erlang                                  |                                                                                                                                                                                                                          |
+| [texlab](https://github.com/latex-lsp/texlab)                                                      | Latex                                   |                                                                                                                                                                                                                          |
+| [eclipse.jdt.ls](https://projects.eclipse.org/projects/eclipse.jdt.ls)                             | Java                                    | 请确保导出 `org.eclipse.jdt.ls.product/target/repository/bin` 到你系统的 PATH 路径                                                                                                                                       |
+| [clojure-lsp](https://github.com/clojure-lsp/clojure-lsp)                                          | Clojure                                 | 如果使用 `homebrew` 安装的，请确保安装的是 `clojure-lsp/brew/clojure-lsp-native` [clojure-lsp-native](https://clojure-lsp.io/installation/#homebrew-macos-and-linux)                                                     |
+| [bash-language-server](https://github.com/bash-lsp/bash-language-server)                           | Bash                                    |                                                                                                                                                                                                                          |
+| [volar](https://github.com/johnsoncodehk/volar)                                                    | Vue                                     | `npm install -g typescript @volar/vue-language-server`                                                                                                                                                                   |
+| [sumneko](https://github.com/sumneko/lua-language-server)                                          | Lua                                     | 请确保导出 sumneko 的 `bin` 目录到你系统的 PATH 路径                                                                                                                                                                     |
+| [wxml-language-server](https://github.com/chemzqm/wxml-languageserver)                             | Wxml                                    |                                                                                                                                                                                                                          |
+| [vscode-html-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)             | HTML                                    | `npm i -g vscode-langservers-extracted`                                                                                                                                                                                  |
+| [vscode-css-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)              | CSS                                     | `npm i -g vscode-langservers-extracted`                                                                                                                                                                                  |
+| [vscode-eslint-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)           | JavaScript                              | `npm i -g vscode-langservers-extracted`                                                                                                                                                                                  |
+| [vscode-json-language-server](https://github.com/hrsh7th/vscode-langservers-extracted)             | JSON                                    | `npm i -g vscode-langservers-extracted`                                                                                                                                                                                  |
+| [elm-language-server](https://github.com/elm-tooling/elm-language-server)                          | Elm                                     |                                                                                                                                                                                                                          |
+| [intelephense](https://github.com/bmewburn/vscode-intelephense)                                    | PHP                                     |                                                                                                                                                                                                                          |
+| [Phpactor](https://github.com/phpactor/phpactor)                                                   | PHP                                     | lsp-brige-php-lsp-server 设置成 `phpactor`                                                                                                                                                                               |
+| [yaml-language-server](https://github.com/redhat-developer/yaml-language-server)                   | Yaml                                    | `npm install -g yaml-language-server`                                                                                                                                                                                    |
+| [zls](https://github.com/zigtools/zls)                                                             | Zig                                     | 运行 `zls config` 来生成 zls 的配置。参考 [Configuration Options](https://github.com/zigtools/zls#configuration-options)                                                                                                 |
+| [groovy-language-server](https://github.com/GroovyLanguageServer/groovy-language-server)           | Groovy                                  | 在 PATH 中创建一个名为 "groovy-language-server" 的脚本, 内容为 `$JAVA_HOME/bin/java -jar <path>/groovy-language-server-all.jar`                                                                                          |
+| [docker-language-server](https://github.com/rcjsuen/dockerfile-language-server-nodejs)             | Dockerfiles                             |                                                                                                                                                                                                                          |
+| [serve-d](https://github.com/Pure-D/serve-d)                                                       | D                                       | serve-d 不支持单文件模式, 使用前请先在项目目录下初始 git 仓库或者自定义 `lsp-bridge-get-project-path-by-filepath` 返回项目目录                                                                                           |
+| [fortls](https://github.com/gnikit/fortls)                                                         | Fortran                                 |                                                                                                                                                                                                                          |
+| [emmet-ls](https://github.com/aca/emmet-ls)                                                        | HTML, JavaScript, CSS, SASS, SCSS, LESS |                                                                                                                                                                                                                          |
+| [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                              | Nix                                     |                                                                                                                                                                                                                          |
+| [taxlab](https://github.com/latex-lsp/texlab)                                                      | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `taxlab`                                                                                                                                                                              |
+| [digestif](https://github.com/astoff/digestif)                                                     | Latex                                   | `lsp-bridge-tex-lsp-server` 设置成 `digestif`                                                                                                                                                                            |
+| [rlanguageserver](https://github.com/REditorSupport/languageserver)                                | R                                       |                                                                                                                                                                                                                          |
+| [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli) | GraphQL                                 |                                                                                                                                                                                                                          |
+| [cmake-language-server](https://github.com/regen100/cmake-language-server)                         | Cmake                                   | `pip install cmake-language-server`                                                                                                                                                                                      |
+| [ds-pinyin](https://github.com/iamcco/ds-pinyin-lsp)                                               | Org-mode                                | `cargo install ds-pinyin-lsp`, 下载 ds-pinyin 的 dict.db3 文件， 并保存到目录 ~/.emacs.d/ds-pinyin/ , 最后开启选项 `lsp-bridge-use-ds-pinyin-in-org-mode`                                                                |
+| [Wen](https://github.com/metaescape/Wen)                                                           | Org-mode                                | `pip install pygls pypinyin`, 开启选项 `lsp-bridge-use-wenls-in-org-mode`                                                                                                                                                |
+| [sourcekit-lsp](https://github.com/apple/sourcekit-lsp)                                            | Swift                                   | Sourcekit-lsp 包含在 swift toolchain 中。                                                                                                                                                                                |
+| [omnisharp-mono](https://github.com/OmniSharp/omnisharp-roslyn)                                    | C#                                      | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-mono`                                                  |
+| [omnisharp-dotnet](https://github.com/OmniSharp/omnisharp-roslyn)                                  | C#                                      | OmniSharp 是 .NET 开发平台, 使用命令 `M-x lsp-bridge-install-omnisharp` 来安 OmniSharp, 默认是 `omnisharp-mono`. `lsp-bridge-csharp-lsp-server` 设置成 `omnisharp-dotnet`                                                |
+| [deno](https://deno.land)                                                                          | Deno                                    | Deno 使用 TypeScript 来编程， 你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Deno 项目的路径时， 返回 "deno" 字符串                                                                              |
+| [ansible-language-server](https://github.com/ansible/ansible-language-server)                      | Ansible                                 | Ansible 使用 YAML 来编程，你需要定制选项 `lsp-bridge-get-single-lang-server-by-project` 当工程是 Ansible 项目的路径时， 返回 "ansible-language-server" 字符串                                                            |
+| [astro](https://github.com/withastro/language-tools/tree/main/packages/language-server)            | Astro                                   | `npm i -g @astrojs/language-server`                                                                                                                                                                                      |
+| [qmlls]((https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls))                                | QML                                     | QT 6.3.0 之后的版本自带 qmlls，将 qmlls 所在目录加到 PATH 中                                                                                                                                                             |
+| [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                           | Kotlin                                  |                                                                                                                                                                                                                          |
+| [vhdl-tool](https://www.vhdltool.com)                                                              | VHDL                                    |                                                                                                                                                                                                                          |
 
 ## 加入开发
 
@@ -275,47 +297,13 @@ lsp-bridge 的目标是实现 Emacs 生态中性能最快的 LSP 客户端, 但�
 * [LSP 协议规范](https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/)
 * [lsp-bridge 架构设计](https://manateelazycat.github.io/emacs/2022/05/12/lsp-bridge.html)
 * [为什么 lsp-bridge 不用 capf](https://manateelazycat.github.io/emacs/2022/06/26/why-lsp-bridge-not-use-capf.html)
+* [lsp-bridge Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 接着打开开发选项 ```lsp-bridge-enable-log``` ， happy hacking! ;)
 
-### 开发多线程异步补全后端
-lsp-bridge 基于 Python 的多线程技术来构建补全后端， 有了多线程技术的加持， 不管你搜索多大的数据， lsp-bridge 都将保障补全体验持续丝滑， 复杂的补全后端请多参考已有后端 (lsp-bridge/acm/acm-backend-*.el) 的设计。
-
-针对一些小场景， 比如某种语言需要添加额外的关键字补全， lsp-bridge 提供了一些脚手架代码帮助你快速构建自己的异步补全后端：
-
-#### 1. 缓存关键字列表
-```elisp
-(lsp-bridge-call-async "search_list_update" "example" (list "keyword_a" "keyword_b" "keyword_c") 100   "lsp-bridge-example-record")
-```
-
-我们可以通过接口函数 `search_list_update` 快速把关键字列表缓存到 lsp-bridge 的 Python 进程， 其中 `example` 是补全后端的名字， `(list "keyword_a" "keyword_b" "keyword_c")` 是关键字列表， `100` 是搜索后选词的最大数目， `lsp-bridge-example-record` 是搜索完成后调用的回调函数名称。
-
-#### 2. 多线程搜索过滤
-```elisp
-(lsp-bridge-call-async "search_list_search" "example" "current_symbol")
-```
-
-当完成关键字缓存以后， 再通过接口函数 `search_list_search` 进行搜索， 其中 `example` 是补全后端名字， `current_symbol` 是搜索关键字， 一般都是光标处的符号。 当调用 `search_list_search` 时， lsp-bridge 会自动用子线程进行搜索过滤， 并自动检测搜索结果是否已经过期？ 如果搜索结果没有过期， 调用回调函数 `lsp-bridge-example-record` 记录搜索结果。
-
-#### 3. 异步数据弹出补全
-```elisp
-(defun lsp-bridge-example-record (candidates)
-  (setq-local acm-backend-example-items candidates)
-  (lsp-bridge-try-completion))
-```
-
-一般 `lsp-bridge-example-record` 都是这样定义的， 接到异步后端返回的 `candidates` 后， 先把搜索结果保存到 buffer 中， 这里是 `acm-backend-example-items` 局部变量 （需要自己定义）, 然后再调用函数 `lsp-bridge-try-completion` ， 尝试弹出补全菜单。
-
-
-## 优化 Python 性能
-1. 开启性能剖析选项： (setq lsp-bridge-enable-profile t)
-2. 重启 lsp-bridge: `lsp-bridge-restart-process`
-3. 正常写代码， 进行补全操作， 时间越长越好
-4. 输出性能剖析日志： `lsp-bridge-profile-dump`
-5. 安装 snakeviz: sudo pip3 install snakeviz
-6. 展示性能瓶颈： snakeviz ~/lsp-bridge.prof 
-
 ## 反馈问题
+
+关于一些常用问题， 请先阅读[Wiki](https://github.com/manateelazycat/lsp-bridge/wiki)
 
 请用命令 `emacs -q` 并只添加 lsp-bridge 配置做一个对比测试，如果 `emacs -q` 可以正常工作，请检查你个人的配置文件。
 

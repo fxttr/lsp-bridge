@@ -151,11 +151,6 @@
   :type 'boolean
   :group 'acm)
 
-(defcustom acm-snippet-insert-index 8
-  "Insert index of snippet candidate of menu."
-  :type 'integer
-  :group 'acm)
-
 (defcustom acm-candidate-match-function 'regexp-quote
   "acm candidate match function."
   :type '(choice (const regexp-quote)
@@ -176,6 +171,16 @@
   :type 'integer
   :group 'acm)
 
+(defcustom acm-frame-background-dark-color "#191a1b"
+  "The frame background color for dark theme."
+  :type 'string
+  :group 'acm)
+
+(defcustom acm-frame-background-light-color "#f0f0f0"
+  "The frame background color for dark theme."
+  :type 'string
+  :group 'acm)
+
 (cl-defmacro acm-run-idle-func (timer idle func)
   `(unless ,timer
      (setq ,timer
@@ -187,11 +192,13 @@
     (define-key map [remap previous-line] #'acm-select-prev)
     (define-key map [down] #'acm-select-next)
     (define-key map [up] #'acm-select-prev)
-    (define-key map [tab]  #'acm-complete)
     (define-key map "\M-n" #'acm-select-next)
     (define-key map "\M-p" #'acm-select-prev)
     (define-key map "\M-," #'acm-select-last)
     (define-key map "\M-." #'acm-select-first)
+    (define-key map "\C-v" #'acm-select-next-page)
+    (define-key map "\M-v" #'acm-select-prev-page)
+    (define-key map [tab]  #'acm-complete)
     (define-key map "\C-m" #'acm-complete)
     (define-key map "\t" #'acm-complete)
     (define-key map "\n" #'acm-complete)
@@ -203,7 +210,6 @@
     (define-key map "\M-k" #'acm-doc-scroll-down)
     (define-key map "\M-l" #'acm-hide)
     (define-key map "\C-g" #'acm-hide)
-    (acm-keymap--bind-quick-access map)
     map)
   "Keymap used when popup is shown.")
 
@@ -268,12 +274,11 @@
                    (point))
                (point-at-bol)))))
     ("ascii"
-     (let ((bound (bounds-of-thing-at-point 'symbol)))
-       (when bound
-         (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
-                (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
-                            (length keyword))))
-           (cons (- (cdr bound) offset) (cdr bound))))))))
+     (when-let ((bound (bounds-of-thing-at-point 'symbol)))
+       (let* ((keyword (buffer-substring-no-properties (car bound) (cdr bound)))
+              (offset (or (string-match "[[:nonascii:]]+" (reverse keyword))
+                          (length keyword))))
+         (cons (- (cdr bound) offset) (cdr bound)))))))
 
 (defun acm-get-input-prefix ()
   "Get user input prefix."
@@ -322,8 +327,7 @@ Only calculate template candidate when type last character."
 (defun acm-template-candidate-update ()
   "Set `acm-template-candidate-show-p' to t to calculate template candidates."
   (setq-local acm-template-candidate-show-p t)
-  (when (acm-frame-visible-p acm-menu-frame)
-    (acm-update)))
+  (acm-update))
 
 (cl-defmacro acm-cancel-timer (timer)
   `(when ,timer
@@ -336,12 +340,20 @@ Only calculate template candidate when type last character."
                                 (backward-char (length keyword))
                                 (acm-char-before)))
          (candidates (list))
+         (mode-candidates-min-index 2)
+         (template-candidates-min-index 2)
          lsp-candidates
          path-candidates
          yas-candidates
          tabnine-candidates
          tempel-candidates
          mode-candidates
+         mode-first-part-candidates
+         mode-second-part-candidates
+         mode-candidates-split-index
+         template-candidates
+         template-first-part-candidates
+         template-second-part-candidates
          citre-candidates)
     (when acm-enable-tabnine
       (setq tabnine-candidates (acm-backend-tabnine-candidates keyword)))
@@ -393,16 +405,36 @@ Only calculate template candidate when type last character."
             (acm-cancel-timer acm-template-candidate-timer)
             (setq acm-template-candidate-timer (run-with-timer 0.2 nil #'acm-template-candidate-update)))))
 
-        ;; Insert snippet candidates in first page of menu.
-        (setq candidates
-              (if (> (length mode-candidates) acm-snippet-insert-index)
-                  (append (cl-subseq mode-candidates 0 acm-snippet-insert-index)
-                          yas-candidates
-                          tempel-candidates
-                          (cl-subseq mode-candidates acm-snippet-insert-index)
-                          tabnine-candidates)
-                (append mode-candidates yas-candidates tempel-candidates tabnine-candidates)
-                ))))
+        ;; Build template candidates.
+        ;; And make sure show part of template candidates in first completion menu.
+        (setq template-candidates (append yas-candidates tempel-candidates))
+        (if (> (length template-candidates) template-candidates-min-index)
+            (progn
+              (setq template-first-part-candidates (cl-subseq template-candidates 0 template-candidates-min-index))
+              (setq template-second-part-candidates (cl-subseq template-candidates template-candidates-min-index)))
+          (setq template-first-part-candidates template-candidates)
+          (setq template-second-part-candidates nil))
+
+        ;; Make sure show part of TabNine candidates in first completion menu.
+        (setq mode-candidates-split-index
+              (max (- acm-menu-length (+ (length template-first-part-candidates) (length tabnine-candidates)))
+                   mode-candidates-min-index))
+
+        ;; Build mode candidates.
+        (if (> (length mode-candidates) mode-candidates-split-index)
+            (progn
+              (setq mode-first-part-candidates (cl-subseq mode-candidates 0 mode-candidates-split-index))
+              (setq mode-second-part-candidates (cl-subseq mode-candidates mode-candidates-split-index)))
+          (setq mode-first-part-candidates mode-candidates)
+          (setq mode-second-part-candidates nil))
+
+        ;; Build all backend candidates.
+        (setq candidates (append mode-first-part-candidates
+                                 template-first-part-candidates
+                                 tabnine-candidates
+                                 template-second-part-candidates
+                                 mode-second-part-candidates)
+              )))
 
     ;; Return candidates.
     (if acm-filter-overlay
@@ -419,6 +451,9 @@ The key of candidate will change between two LSP results."
   (format "%s###%s" (plist-get candidate :label) (plist-get candidate :backend)))
 
 (defun acm-update ()
+  ;; Init quick mode map.
+  (acm-quick-access-init)
+
   ;; Adjust `gc-cons-threshold' to maximize temporary,
   ;; make sure Emacs not do GC when filter/sort candidates.
   (let* ((gc-cons-threshold most-positive-fixnum)
@@ -430,11 +465,10 @@ The key of candidate will change between two LSP results."
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
          (bounds (acm-get-input-prefix-bound)))
     (cond
-     ;; Hide completion menu if user type first candidate completely.
+     ;; Hide completion menu if user type first candidate completely, except when candidate annotation is `emmet' or `snippet'.
      ((and (equal (length candidates) 1)
            (string-equal keyword (plist-get (nth 0 candidates) :label))
-           ;; Volar always send back single emmet candidate, we need filter this condition.
-           (not (string-equal "Emmet Abbreviation" (plist-get (nth 0 candidates) :annotation))))
+           (not (member (plist-get (nth 0 candidates) :annotation) '("Emmet Abbreviation" "Snippet" "Yas-Snippet" "Tempel"))))
       (acm-hide))
      ((> (length candidates) 0)
       (let* ((menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
@@ -708,7 +742,7 @@ The key of candidate will change between two LSP results."
                         (+ cursor-y offset-y))))
     (acm-frame-set-frame-position acm-menu-frame acm-frame-x acm-frame-y)))
 
-(defun acm-doc-try-show ()
+(defun acm-doc-try-show (&optional update-completion-item)
   (when acm-enable-doc
     (let* ((candidate (acm-menu-current-candidate))
            (backend (plist-get candidate :backend))
@@ -716,8 +750,7 @@ The key of candidate will change between two LSP results."
            (candidate-doc
             (when (fboundp candidate-doc-func)
               (funcall candidate-doc-func candidate))))
-      (if (or (consp candidate-doc) ; If the type fo snippet is set to command,
-                                        ; then the "doc" will be a list.
+      (if (or (consp candidate-doc) ; If the type fo snippet is set to command, then the "doc" will be a list.
               (and (stringp candidate-doc) (not (string-empty-p candidate-doc))))
           (let ((doc (if (stringp candidate-doc)
                          candidate-doc
@@ -728,6 +761,7 @@ The key of candidate will change between two LSP results."
 
             ;; Insert documentation and turn on wrap line.
             (with-current-buffer (get-buffer-create acm-doc-buffer)
+              (read-only-mode -1)
               (erase-buffer)
               (insert doc)
               (visual-line-mode 1))
@@ -745,10 +779,12 @@ The key of candidate will change between two LSP results."
             ;; Adjust doc frame position and size.
             (acm-doc-frame-adjust))
 
-        ;; Hide doc frame immediately if backend is not LSP.
-        ;; If backend is LSP, doc frame hide is control by `lsp-bridge-completion-item--update'.
-        (unless (string-equal backend "lsp")
-          (acm-doc-hide))))))
+        (pcase backend
+          ;; If backend is LSP, doc frame hide when `update-completion-item' is t.
+          ("lsp" (when update-completion-item
+                   (acm-doc-hide)))
+          ;; Hide doc frame immediately if backend is not LSP.
+          (_ (acm-doc-hide)))))))
 
 (defun acm-doc-frame-adjust ()
   (let* ((emacs-width (frame-pixel-width))
@@ -840,6 +876,16 @@ The key of candidate will change between two LSP results."
           (menu-old-cache (cons acm-menu-max-length-cache acm-menu-number-cache)))
      ,@body
 
+     (cond ((< acm-menu-index 0)
+            (setq-local acm-menu-index 0))
+           ((>= acm-menu-index (length acm-menu-candidates))
+            (setq-local acm-menu-index (1- (length acm-menu-candidates)))))
+
+     (cond ((< acm-menu-offset 0)
+            (setq-local acm-menu-offset 0))
+           ((>= acm-menu-offset (- (length acm-candidates) (length acm-menu-candidates)))
+            (setq-local acm-menu-offset (- (length acm-candidates) (length acm-menu-candidates)))))
+
      ;; Only update menu candidates when menu index or offset changed.
      (when (or (not (equal menu-old-index acm-menu-index))
                (not (equal menu-old-offset acm-menu-offset)))
@@ -890,6 +936,24 @@ The key of candidate will change between two LSP results."
          ((> acm-menu-offset 0)
           (setq-local acm-menu-offset (1- acm-menu-offset))))))
 
+(defun acm-select-next-page ()
+  "Select next page candidate."
+  (interactive)
+  (acm-menu-update
+   (cond ((< acm-menu-index (1- (length acm-menu-candidates)))
+          (setq-local acm-menu-index (+ acm-menu-index acm-menu-length)))
+         ((< (+ acm-menu-offset acm-menu-index) (1- (length acm-candidates)))
+          (setq-local acm-menu-offset (+ acm-menu-offset acm-menu-length))))))
+
+(defun acm-select-prev-page ()
+  "Select previous page candidate."
+  (interactive)
+  (acm-menu-update
+   (cond ((> acm-menu-index 0)
+          (setq-local acm-menu-index (- acm-menu-index acm-menu-length)))
+         ((> acm-menu-offset 0)
+          (setq-local acm-menu-offset (- acm-menu-offset acm-menu-length))))))
+
 (defun acm-doc-scroll-up ()
   (interactive)
   (with-current-buffer acm-doc-buffer
@@ -927,8 +991,9 @@ The key of candidate will change between two LSP results."
      ("&lt;" . ?<) ("&gt;" . ?>) ("&amp;" . ?&))))
 
 (defun acm-frame-background-color ()
-  (let* ((theme-mode (format "%s" (frame-parameter nil 'background-mode))))
-    (if (string-equal theme-mode "dark") "#191a1b" "#f0f0f0")))
+  (pcase (format "%s" (frame-parameter nil 'background-mode))
+    ("dark" acm-frame-background-dark-color)
+    ("light" acm-frame-background-light-color)))
 
 (defun acm-markdown-render-content ()
   (when (fboundp 'gfm-view-mode)
@@ -936,6 +1001,9 @@ The key of candidate will change between two LSP results."
       (setq-local markdown-fontify-code-blocks-natively t)
       (setq acm-markdown-render-background (face-background 'markdown-code-face))
       (setq acm-markdown-render-height (face-attribute 'markdown-code-face :height))
+      ;; NOTE:
+      ;; Please DON'T use `face-remap-add-relative' here, it's WRONG.
+      ;;
       (set-face-background 'markdown-code-face (acm-frame-background-color))
       (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-font-height)
       (gfm-view-mode)))
@@ -952,6 +1020,7 @@ The key of candidate will change between two LSP results."
   (when (and (acm-frame-visible-p acm-doc-frame)
              (not (string-equal doc acm-markdown-render-doc)))
     (with-current-buffer (get-buffer-create acm-doc-buffer)
+      (read-only-mode -1)
       (acm-markdown-render-content))
 
     (setq acm-markdown-render-doc doc)))
