@@ -17,7 +17,7 @@ Using Python multithreading techniques, lsp-bridge builds a high-speed cache bet
 ## Installation
 
 1. Install Emacs version 28 or higher.
-2. Install Python dependencies: `pip3 install epc orjson sexpdata==0.0.3 six` (orjson is optional and provides faster JSON parsing performance based on Rust).
+2. Install Python dependencies: `pip3 install epc orjson sexpdata six` (orjson is optional and provides faster JSON parsing performance based on Rust).
 3. Install Elisp dependencies:
 + [posframe](https://github.com/tumashu/posframe)
 + [markdown-mode](https://github.com/jrblevin/markdown-mode)
@@ -42,7 +42,7 @@ Please note that:
 2. When the completion menu pops up, `acm-mode` will be automatically enabled, and when the completion menu disappears, `acm-mode` will be automatically disabled. Please do not manually add `acm-mode` to any mode-hook or manually execute `acm-mode`.
 
 ## Usage
-Lsp-bridge is design with out of box. After installing the corresponding [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin for the language, you can start coding directly without any additional settings.
+Lsp-bridge works out of the box. After installing the corresponding [LSP server](https://github.com/manateelazycat/lsp-bridge#supported-language-servers) and mode plugin for the language, you can start coding directly without any additional settings.
 
 It should be noted that lsp-bridge has three scanning modes:
 
@@ -106,7 +106,7 @@ It should be noted that lsp-bridge has three scanning modes:
 * `lsp-bridge-c-lsp-server`: C language server, you can choose `clangd` or` ccls`
 * `lsp-bridge-python-lsp-server`: Python language server, you can choose `pyright`, `jedi`, `python-ms`, `pylsp`, `ruff`
 * `lsp-bridge-php-lsp-server`: PHP language server, you can choose `intelephense` or `phpactor`
-* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `taxlab` or` digestif`
+* `lsp-bridge-tex-lsp-server`: LaTeX language server, you can choose `texlab` or` digestif`
 * `lsp-bridge-csharp-lsp-server`: C# language server, you can choose `omnisharp-mono` or` omnisharp-dotnet`, note that you need to give **execute permissions** to the OmniSharp file
 * `lsp-bridge-python-multi-lsp-server`: Python multi-language servers, you can choose `pyright_ruff`, `jedi_ruff`, `python-ms_ruff`, `pylsp_ruff`
 
@@ -132,6 +132,7 @@ It should be noted that lsp-bridge has three scanning modes:
 * `lsp-bridge-user-langserver-dir`: the dir where user place langserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/langserver](https://github.com/manateelazycat/lsp-bridge/tree/master/langserver) , lsp-bridge will use the configuration file in this dir
 * `lsp-bridge-user-multiserver-dir`: the dir where user place multiserver configuration file, if the configuration file name in the dir is the same as that in [lsp-bridge/multiserver](https://github.com/manateelazycat/lsp-bridge/tree/master/multiserver) , lsp-bridge will use the configuration file in this dir
 * `lsp-bridge-symbols-enable-which-func`: Using lsp backend for `which-func`, disable by default
+* `lsp-bridge-enable-org-babel`: Using lsp backend for org babel, disable by default
 * `acm-frame-background-dark-color`: Menu background color in dark theme
 * `acm-frame-background-light-color`: Menu background color in light theme
 * `acm-markdown-render-font-height`: The font height of function documentation, default is 130
@@ -252,7 +253,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [fortls](https://github.com/gnikit/fortls)                                                           | Fortran                                   |                                                                                                                                                                               |
 | [emmet-ls](https://github.com/aca/emmet-ls)                                                          | HTML, JavaScript, CSS, SASS, SCSS, LESS   |                                                                                                                                                                               |
 | [rnix-lsp](https://github.com/nix-community/rnix-lsp)                                                | Nix                                       |                                                                                                                                                                               |
-| [taxlab](https://github.com/latex-lsp/texlab)                                                        | Latex                                     | `lsp-bridge-tex-lsp-server` set to `taxlab`                                                                                                                                   |
+| [texlab](https://github.com/latex-lsp/texlab)                                                        | Latex                                     | `lsp-bridge-tex-lsp-server` set to `texlab`                                                                                                                                   |
 | [digestif](https://github.com/astoff/digestif)                                                       | Latex                                     | `lsp-bridge-tex-lsp-server` set to `digestif`                                                                                                                                 |
 | [rlanguageserver](https://github.com/REditorSupport/languageserver)                                  | R                                         |                                                                                                                                                                               |
 | [graphql-lsp](https://github.com/graphql/graphiql/tree/main/packages/graphql-language-service-cli)   | GraphQL                                   |                                                                                                                                                                               |
@@ -268,6 +269,7 @@ You need to install the LSP server corresponding to each programming language, t
 | [qmlls](https://github.com/qt/qtdeclarative/tree/dev/tools/qmlls)                                    | QML                                       | The `qmlls` binary should be part of the normal Qt packages since Qt 6.3.0 Ensure that the directory  of `qmlls` binary file is in PATH                                       |
 | [kotlin-language-server](https://github.com/fwcd/kotlin-language-server)                             | Kotlin                                    |                                                                                                                                                                               |
 | [vhdl-tool](https://www.vhdltool.com)                                                                | VHDL                                |                                                                                                                                                                               |
+| [julials](https://github.com/julia-vscode/LanguageServer.jl)                                         | Julia                                |                                                                                                                                                                               |
 ## Join development
 
 The following is the framework of lsp-bridge:
