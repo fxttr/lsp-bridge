@@ -290,7 +290,7 @@ class LspServer:
             "rootPath": self.root_path,
             "clientInfo": {
                 "name": "emacs",
-                "version": get_emacs_version()
+                "version": "lsp-bridge"
             },
             "rootUri": path_to_uri(self.project_path),
             "capabilities": self.get_capabilities(),
@@ -299,8 +299,6 @@ class LspServer:
 
     def get_capabilities(self):
         server_capabilities = self.server_info.get("capabilities", {})
-
-        is_snippet_support = get_emacs_func_result("is-snippet-support")
 
         merge_capabilites = merge(server_capabilities, {
             "workspace": {
@@ -314,7 +312,7 @@ class LspServer:
             "textDocument": {
                 "completion": {
                     "completionItem": {
-                        "snippetSupport": False if not is_snippet_support else True,
+                        "snippetSupport": True,
                         "deprecatedSupport": True,
                         "tagSupport": {
                             "valueSet": [
@@ -427,7 +425,7 @@ class LspServer:
         if self.save_include_text:
             args = merge(args, {
                 "textDocument": {
-                    "text": get_emacs_func_result('get-buffer-content', buffer_name)
+                    "text": get_buffer_content(filepath, buffer_name)
                 }
             })
         
@@ -487,16 +485,26 @@ class LspServer:
     def handle_workspace_configuration_request(self, name, request_id, params):
         settings = self.server_info.get("settings", {})
 
-        # We send empty message back to server if nothing in 'settings' of server.json file.
+        # NOTE: We send message fill null with same length of workspace/configuration params and send back to server
+        # if nothing in 'settings' of server.json file.
+        # Otherwise, some LSP server, such as zls will crash if we just send back empty list.
         if settings is None or len(settings) == 0:
-            self.sender.send_response(request_id, [])
+            self.sender.send_response(request_id, [None] * len(params["items"]))
             return
 
         # Otherwise, send back section value or default settings.
         items = []
         for p in params["items"]:
             section = p.get("section", self.server_info["name"])
-            items.append(settings.get(section, {}))
+            sessionSettings = settings.get(section, {})
+
+            if self.server_info["name"] == "vscode-eslint-language-server":
+                sessionSettings["workspaceFolder"] = {
+                    "name": self.project_name,
+                    "uri": path_to_uri(self.project_path),
+                }
+
+            items.append(sessionSettings)
         self.sender.send_response(request_id, items)
 
     def handle_recv_message(self, message: dict):
@@ -586,7 +594,7 @@ class LspServer:
                     self.signature_help_provider = message["result"]["capabilities"]["signatureHelpProvider"]
                 except Exception:
                     pass
-                
+
                 try:
                     self.workspace_symbol_provider = message["result"]["capabilities"]["workspaceSymbolProvider"]
                 except Exception:
@@ -600,7 +608,7 @@ class LspServer:
                         self.text_document_sync = text_document_sync["change"]
                 except Exception:
                     pass
-                
+
                 try:
                     self.save_include_text = message["result"]["capabilities"]["textDocumentSync"]["save"]["includeText"]
                 except Exception:
