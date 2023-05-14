@@ -470,7 +470,7 @@ Only calculate template candidate when type last character."
 The key of candidate will change between two LSP results."
   (format "%s###%s" (plist-get candidate :label) (plist-get candidate :backend)))
 
-(defun acm-update ()
+(defun acm-update (&optional candidate)
   ;; Init quick mode map.
   (acm-quick-access-init)
 
@@ -480,7 +480,7 @@ The key of candidate will change between two LSP results."
          (keyword (acm-get-input-prefix))
          (previous-select-candidate-index (+ acm-menu-offset acm-menu-index))
          (previous-select-candidate (acm-menu-index-info (acm-menu-current-candidate)))
-         (candidates (acm-update-candidates))
+         (candidates (or candidate (acm-update-candidates)))
          (menu-candidates (cl-subseq candidates 0 (min (length candidates) acm-menu-length)))
          (current-select-candidate-index (cl-position previous-select-candidate (mapcar 'acm-menu-index-info menu-candidates) :test 'equal))
          (bounds (acm-get-input-prefix-bound)))
@@ -638,6 +638,7 @@ The key of candidate will change between two LSP results."
          (bound-start acm-menu-frame-popup-point)
          (backend (plist-get candidate-info :backend))
          (candidate-expand (intern-soft (format "acm-backend-%s-candidate-expand" backend))))
+
     (if (fboundp candidate-expand)
         (funcall candidate-expand candidate-info bound-start)
       (delete-region bound-start (point))
@@ -787,7 +788,7 @@ The key of candidate will change between two LSP results."
               (visual-line-mode 1))
 
             ;; Only render markdown styling when idle 200ms, because markdown render is expensive.
-            (when (string-equal backend "lsp")
+            (when (member backend '("lsp" "codeium"))
               (acm-cancel-timer acm-markdown-render-timer)
               (cl-case acm-enable-doc-markdown-render
                 (async (setq acm-markdown-render-timer
@@ -1003,8 +1004,6 @@ The key of candidate will change between two LSP results."
 
 (defvar acm-markdown-render-timer nil)
 (defvar acm-markdown-render-doc nil)
-(defvar acm-markdown-render-background nil)
-(defvar acm-markdown-render-height nil)
 
 (defvar acm-markdown-render-prettify-symbols-alist
   (nconc
@@ -1023,22 +1022,27 @@ The key of candidate will change between two LSP results."
 (defun acm-markdown-render-content ()
   (when (fboundp 'gfm-view-mode)
     (let ((inhibit-message t))
-      (setq-local markdown-fontify-code-blocks-natively t)
-      (setq acm-markdown-render-background (face-background 'markdown-code-face))
-      (setq acm-markdown-render-height (face-attribute 'markdown-code-face :height))
-      ;; NOTE:
-      ;; Please DON'T use `face-remap-add-relative' here, it's WRONG.
-      ;;
-      (set-face-background 'markdown-code-face (acm-frame-background-color))
-      (set-face-attribute 'markdown-code-face nil :height acm-markdown-render-font-height)
-      (gfm-view-mode)))
+      ;; Enable `gfm-view-mode' first, otherwise `gfm-view-mode' will change attribute of face `markdown-code-face'.
+      (gfm-view-mode)
+
+      ;; Then remapping background and height of `markdown-code-face' to same as acm doc buffer.
+      (face-remap-add-relative 'markdown-code-face :background (face-attribute 'default :background acm-menu-frame))
+      (face-remap-add-relative 'markdown-code-face :height acm-markdown-render-font-height)))
+
   (read-only-mode 0)
+
+  ;; Enable prettify-symbols.
   (setq prettify-symbols-alist acm-markdown-render-prettify-symbols-alist)
   (setq prettify-symbols-compose-predicate (lambda (_start _end _match) t))
   (prettify-symbols-mode 1)
+
+  ;; Disable line number.
   (display-line-numbers-mode -1)
+
+  ;; Syntax Highlight.
   (font-lock-ensure)
 
+  ;; Disable mode line.
   (setq-local mode-line-format nil))
 
 (defun acm-doc-markdown-render-content (doc)
@@ -1048,7 +1052,13 @@ The key of candidate will change between two LSP results."
       (read-only-mode -1)
       (acm-markdown-render-content))
 
-    (setq acm-markdown-render-doc doc)))
+    (setq acm-markdown-render-doc doc)
+
+    ;; We need `acm-doc-frame-adjust' again if `acm-enable-doc-markdown-render' is `async'.
+    ;; otherwise, `gfm-view-mode' will remove ``` line.
+    (cl-case acm-enable-doc-markdown-render
+      (async (acm-doc-frame-adjust))
+      )))
 
 (defun acm-in-comment-p (&optional state)
   (if (and (featurep 'treesit) (treesit-parser-list))
